@@ -3,7 +3,19 @@ const faker = require('faker');
 const Chance = require('chance');
 const app = express();
 const chance = new Chance();
+const bunyan = require('bunyan');
+const log = bunyan.createLogger({name: 'play', level: 'debug'});
 const portNumber = 3000;
+
+//------------------------------------------------------------------
+//  @BUNYAN LOGS Simple Example for complex examples refere to docs
+//---------------------------------------------------------------------
+
+log.trace('this one does not emit');
+log.debug('hi on debug');   // console.log 
+log.info('hi on info');     // console.info 
+log.warn('hi on warn');     // console.warn 
+log.error('hi on error');   // console.error 
 
 //------------------------------------------------------------------
 //  @MYSQL DB
