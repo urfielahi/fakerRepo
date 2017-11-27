@@ -3,6 +3,7 @@ const faker = require('faker');
 const Chance = require('chance');
 const app = express();
 const chance = new Chance();
+const portNumber = 3000;
 
 //------------------------------------------------------------------
 //  @MYSQL DB
@@ -18,11 +19,11 @@ var connection = mysql.createConnection({
    
     
 connection.connect(function(err){
-if(!err) {
-    console.log("Database is connected");    
-} else {
-    console.log("Error connecting database");    
-}
+    if(!err) {
+        console.log("Database is connected");    
+    } else {
+        console.log("Error connecting database");    
+    }
 });
     
 connection.query('SELECT * FROM employees', (err,rows) => {
@@ -33,6 +34,7 @@ connection.query('SELECT * FROM employees', (err,rows) => {
         console.log(`${row.name} is in ${row.location}`); 
     });
 });
+
 for(var i = 0; i < 100; i++){
     var passenger = {
         p_id: faker.random.uuid(),
@@ -133,4 +135,4 @@ for(var i = 0; i < 100; i++){
 
 
 
-app.listen(3000, () => console.log('Example app listening on port 3000!'))
+app.listen(portNumber, () => console.log(`Example app listening on port ${portNumber}!`));
