@@ -1,6 +1,8 @@
 const express = require('express');
 const faker = require('faker');
+const Chance = require('chance');
 const app = express();
+const chance = new Chance();
 
 //------------------------------------------------------------------
 //  @MYSQL DB
@@ -10,7 +12,7 @@ var mysql      = require('mysql');
 var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : '',
+    password : 'root',
     database : 'faker'
 });
    
@@ -31,19 +33,17 @@ connection.query('SELECT * FROM employees', (err,rows) => {
         console.log(`${row.name} is in ${row.location}`); 
     });
 });
-
-for(var i=0; i< 100; i++){
+for(var i = 0; i < 100; i++){
     var passenger = {
-                p_id: faker.random.uuid(),
-                name: faker.name.findName(),
-                phone_num: faker.phone.phoneNumberFormat(), 
-                card_num: faker.payment.creditCardNumber(),
-                card_exp_date:  faker.payment.creditCardExpirationDate()
-            };
+        p_id: faker.random.uuid(),
+        name: faker.name.findName(),
+        phone_num: faker.phone.phoneNumberFormat(), 
+        card_num: chance.cc({type: chance.cc_type()}),
+        card_exp_date: chance.exp_month() + "/" + chance.exp_year()
+    };
+
     connection.query('INSERT INTO passenger SET ?', passenger, (err, res) => {
-
-        if(err) throw err;
-
+    if(err) throw err;  
     console.log('Last insert ID:', res.insertId);
     });
 }
