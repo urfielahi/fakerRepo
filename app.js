@@ -48,8 +48,9 @@ connection.query('SELECT * FROM employees', (err,rows) => {
 });
 
 for(var i = 0; i < 100; i++){
-    var passenger = {
-        p_id: faker.random.uuid(),
+    var uuid = faker.random.uuid();
+     var passenger = {
+        p_id: uuid,
         name: faker.name.findName(),
         phone_num: faker.phone.phoneNumberFormat(), 
         card_num: chance.cc({type: chance.cc_type()}),
