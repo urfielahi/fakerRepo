@@ -8,7 +8,7 @@ const log = bunyan.createLogger({name: 'play', level: 'debug'});
 const portNumber = 3000;
 
 //------------------------------------------------------------------
-//  @BUNYAN LOGS Simple Example for complex examples refere to docs
+//  @BUNYAN LOGS Simple Example. For complex examples refere to docs
 //---------------------------------------------------------------------
 
 log.trace('this one does not emit');
@@ -25,7 +25,7 @@ var mysql      = require('mysql');
 var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : 'root',
+    password : '',
     database : 'faker'
 });
    
@@ -38,23 +38,23 @@ connection.connect(function(err){
     }
 });
     
-connection.query('SELECT * FROM employees', (err,rows) => {
-    if(err) throw err;
+// connection.query('SELECT * FROM passenger', (err,rows) => {
+//     if(err) throw err;
   
-    console.log('Data received from Db:\n');
-    rows.forEach( (row) => { 
-        console.log(`${row.name} is in ${row.location}`); 
-    });
-});
+//     console.log('Data received from Db:\n');
+//     rows.forEach( (row) => { 
+//         console.log(`${row.name} is in ${row.location}`); 
+//     });
+// });
 
 for(var i = 0; i < 100; i++){
     var uuid = faker.random.uuid();
-     var passenger = {
+    var passenger = {
         p_id: uuid,
         name: faker.name.findName(),
         phone_num: faker.phone.phoneNumberFormat(), 
         card_num: chance.cc({type: chance.cc_type()}),
-        card_exp_date: chance.exp_month() + "/" + chance.exp_year()
+        card_exp_date: chance.exp_year() + "-" + chance.exp_month()  +  "-01"  
     };
 
     connection.query('INSERT INTO passenger SET ?', passenger, (err, res) => {
