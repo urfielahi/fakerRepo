@@ -7,6 +7,25 @@ const bunyan = require('bunyan');
 const cuid = require('cuid');
 const log = bunyan.createLogger({name: 'play', level: 'debug'});
 const portNumber = 3000;
+const now = require('performance-now');
+//Redis connection
+const redis = require('redis');
+//Redis client specified port and host
+const client = redis.createClient('6379', '127.0.0.1');
+
+client.on('connect', function(){
+    console.log('connected!');
+});
+
+client.set('framework', 'AngularJS', function(err, reply){
+    console.log(reply);
+});
+
+client.get('framework', function(err, reply){
+    console.log(reply);
+});
+
+//console.log(client.get('framework'));
 
 //------------------------------------------------------------------
 //  @BUNYAN LOGS Simple Example. For complex examples refere to docs
@@ -26,7 +45,7 @@ var mysql      = require('mysql');
 var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
-    password : '',
+    password : 'root',
     database : 'flib'
 });
    
@@ -47,21 +66,22 @@ connection.connect(function(err){
 //         console.log(`${row.name}`); 
 //     });
 // });
-
-for(var i = 0; i < 100; i++){
+var t0 = now();
+for(var i = 0; i < 10; i++){
     var passenger = {
-        p_uuid : cuid(),
+        p_uuid : cuid().substr(0,16),
         name: faker.name.findName(),
         phone_num: faker.phone.phoneNumberFormat(), 
         card_num: chance.cc({type: chance.cc_type()}),
         card_exp_date: chance.exp_year() + "-" + chance.exp_month()  +  "-01"  
     };
-
     connection.query('INSERT INTO passenger SET ?', passenger, (err, res) => {
-    if(err) throw err;  
-    console.log('Last insert ID:', res.insertId);
+        if(err) throw err;  
+        console.log('Last insert ID:', res.insertId);
     });
 }
+var t1 = now()
+console.log("Call to doSomething took " + (t1 - t0).toFixed(3) + " milliseconds.");
   
 
 
