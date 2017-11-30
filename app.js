@@ -4,6 +4,7 @@ const Chance = require('chance');
 const app = express();
 const chance = new Chance();
 const bunyan = require('bunyan');
+const cuid = require('cuid');
 const log = bunyan.createLogger({name: 'play', level: 'debug'});
 const portNumber = 3000;
 
@@ -26,7 +27,7 @@ var connection = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
     password : '',
-    database : 'faker'
+    database : 'flib'
 });
    
     
@@ -43,14 +44,13 @@ connection.connect(function(err){
   
 //     console.log('Data received from Db:\n');
 //     rows.forEach( (row) => { 
-//         console.log(`${row.name} is in ${row.location}`); 
+//         console.log(`${row.name}`); 
 //     });
 // });
 
 for(var i = 0; i < 100; i++){
-    var uuid = faker.random.uuid();
     var passenger = {
-        p_id: uuid,
+        p_uuid : cuid(),
         name: faker.name.findName(),
         phone_num: faker.phone.phoneNumberFormat(), 
         card_num: chance.cc({type: chance.cc_type()}),
