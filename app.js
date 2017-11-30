@@ -9,21 +9,24 @@ const log = bunyan.createLogger({name: 'play', level: 'debug'});
 const portNumber = 3000;
 const now = require('performance-now');
 //Redis connection
-const redis = require('redis');
-//Redis client specified port and host
-const client = redis.createClient('6379', '127.0.0.1');
+// const redis = require('redis');
+// //Redis client specified port and host
+// const client = redis.createClient('6379', '127.0.0.1');
 
-client.on('connect', function(){
-    console.log('connected!');
-});
+// //On connect event raised
+// client.on('connect', function(){
+//     console.log('connected!');
+// });
 
-client.set('framework', 'AngularJS', function(err, reply){
-    console.log(reply);
-});
+// //Example to set key-value
+// client.set('framework', 'AngularJS', function(err, reply){
+//     console.log(reply);
+// });
 
-client.get('framework', function(err, reply){
-    console.log(reply);
-});
+// //Example to get Value based on Key
+// client.get('framework', function(err, reply){
+//     console.log(reply);
+// });
 
 //console.log(client.get('framework'));
 
@@ -83,7 +86,20 @@ for(var i = 0; i < 10; i++){
 var t1 = now()
 console.log("Call to doSomething took " + (t1 - t0).toFixed(3) + " milliseconds.");
   
-
+// connection.query('SELECT * FROM passenger', function(err, res){
+//     if(err) throw err;
+//     for(var i = 0; i < res.length; i++){
+//         var id = res[i]['p_id'];
+//         var packet = {
+//             p_uuid : res[i]['p_uuid'],
+//             name: res[i]['p_uuid'],
+//             phone_num: res[i]['phone_num'], 
+//             card_num: res[i]['card_num'],
+//             card_exp_date: res[i]['card_exp_date']  
+//         };
+//         client.set(id, packet.toString());
+//     }
+// });
 
 
 
