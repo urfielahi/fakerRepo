@@ -6,8 +6,13 @@ const chance = new Chance();
 const bunyan = require('bunyan');
 const cuid = require('cuid');
 const log = bunyan.createLogger({name: 'play', level: 'debug'});
-const portNumber = 3000;
+const portNumber = 5220;
 const now = require('performance-now');
+const moment = require('moment');
+const base62 = require('base62');
+const sync = require('synchronize');
+base62.setCharacterSet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+require('dotenv').config()
 //Redis connection
 // const redis = require('redis');
 // //Redis client specified port and host
@@ -34,11 +39,11 @@ const now = require('performance-now');
 //  @BUNYAN LOGS Simple Example. For complex examples refere to docs
 //---------------------------------------------------------------------
 
-log.trace('this one does not emit');
-log.debug('hi on debug');   // console.log 
-log.info('hi on info');     // console.info 
-log.warn('hi on warn');     // console.warn 
-log.error('hi on error');   // console.error 
+// log.trace('this one does not emit');
+// log.debug('hi on debug');   // console.log 
+// log.info('hi on info');     // console.info 
+// log.warn('hi on warn');     // console.warn 
+// log.error('hi on error');   // console.error 
 
 //------------------------------------------------------------------
 //  @MYSQL DB
@@ -46,10 +51,10 @@ log.error('hi on error');   // console.error
 
 var mysql      = require('mysql');
 var connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : 'root',
-    database : 'flib'
+    host     : process.env.DB_HOST,
+    user     : process.env.DB_USERNAME,
+    password : process.env.DB_PASSWORD,
+    database : process.env.DB_DATABASE,
 });
    
     
@@ -57,6 +62,7 @@ connection.connect(function(err){
     if(!err) {
         console.log("Database is connected");    
     } else {
+        console.error(err);
         console.log("Error connecting database");    
     }
 });
@@ -69,23 +75,104 @@ connection.connect(function(err){
 //         console.log(`${row.name}`); 
 //     });
 // });
-var t0 = now();
-for(var i = 0; i < 10; i++){
-    var passenger = {
-        p_uuid : cuid().substr(0,16),
-        name: faker.name.findName(),
-        phone_num: faker.phone.phoneNumberFormat(), 
-        card_num: chance.cc({type: chance.cc_type()}),
-        card_exp_date: chance.exp_year() + "-" + chance.exp_month()  +  "-01"  
-    };
-    connection.query('INSERT INTO passenger SET ?', passenger, (err, res) => {
-        if(err) throw err;  
-        console.log('Last insert ID:', res.insertId);
+
+function LeftPadWithZeros(number, length){
+    var str = '' + number;
+    while (str.length < length) {
+        str = '0' + str;
+    }
+
+    return str;
+}
+
+var generateId = function generateId(table) {
+    connection.query('SELECT max(id) as counter from ' + table, function(err, res) {
+        if(err) throw err;
+        var counter = res[0].counter;
+        if(!counter){
+            counter = 1;
+        }
+        counter++; 
+        var prefix;
+        switch(table){
+            case 'user_driver':
+                prefix = 'DR';
+                break;
+            case 'user_rider':
+                prefix = 'RD';
+                break;
+            case 'vehicle_owner':
+                prefix = 'OV';
+                break;
+            case 'vehicle_master':
+                prefix = 'TR';
+                break;
+            case 'user_admin':
+                prefix = 'AI';
+                break;
+        }
+        var random = Math.random().toString().slice(2,11);
+        var uid = prefix + random + LeftPadWithZeros(base62.encode(counter), 5);
+        console.log(uid);
+        return uid;
     });
 }
+var t0 = now();
+for(var i = 0; i < 10; i++){
+    var user = {
+        email: faker.internet.email().toLowerCase(),
+        phone: faker.phone.phoneNumberFormat().replace(/-/g, ''), 
+        first_name: faker.name.firstName(),
+        last_name: faker.name.lastName(),
+        avatar_type: 'gravatar',
+        avatar_uri: 'doodle.png',
+        password: faker.internet.password(),
+        last_login: moment().format("YYYY-MM-DD HH:mm:ss"),
+        token: cuid().substr(0,16),
+        created_by: 1
+    };
+    console.log(user);
+    // connection.query('INSERT INTO user_master SET ?', user, (err, res) => {
+    //     if(err) throw err;  
+    //     console.log('Last insert ID User_master:', res.insertId);
+    // });
+    if(i % 3 === 0){
+        var driver_id = sync.fiber(generateId('user_driver'));
+        console.log("Driver Id output: " + driver_id);
+        var driver = {
+            driver_id: driver_id,
+            email: user.email,
+            rating: null,
+            confirmation_code: null,
+            confirmed: 0
+        };
+        console.log(driver);
+        // connection.query('INSERT INTO user_driver SET ?', driver, (err, res) => {
+        //     if(err) throw err;
+        //     console.log('Last insert ID Driver:', res.insertId);
+        // });
+    }else{
+        var rider = {
+            rider_id: generateId('user_rider'),
+            email: user.email,
+            rating: null,
+            confirmation_code: null,
+            confirmed: null
+        };
+        console.log(rider);
+        // connection.query('INSERT INTO user_rider SET ?', rider, (err, res) => {
+        //     if(err) throw err;  
+        //     console.log('Last insert ID Rider:', res.insertId);
+        // });
+    }
+}
+
 var t1 = now()
 console.log("Call to doSomething took " + (t1 - t0).toFixed(3) + " milliseconds.");
-  
+
+function createVehicles(){
+
+}
 // connection.query('SELECT * FROM passenger', function(err, res){
 //     if(err) throw err;
 //     for(var i = 0; i < res.length; i++){
