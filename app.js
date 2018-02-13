@@ -6,13 +6,19 @@ const chance = new Chance();
 const bunyan = require('bunyan');
 const cuid = require('cuid');
 const log = bunyan.createLogger({name: 'play', level: 'debug'});
-const portNumber = 5220;
+const portNumber = 5620;
 const now = require('performance-now');
 const moment = require('moment');
 const base62 = require('base62');
-const sync = require('synchronize');
+//const sync = require('synchronize');
 base62.setCharacterSet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-require('dotenv').config()
+require('dotenv').config();
+
+var sync = require('synchronize');
+var fiber = sync.fiber;
+var await = sync.await;
+var defer = sync.defer;
+
 //Redis connection
 // const redis = require('redis');
 // //Redis client specified port and host
@@ -85,7 +91,7 @@ function LeftPadWithZeros(number, length){
     return str;
 }
 
-var generateId = function generateId(table) {
+function generateId(table, callback) {
     connection.query('SELECT max(id) as counter from ' + table, function(err, res) {
         if(err) throw err;
         var counter = res[0].counter;
@@ -113,59 +119,115 @@ var generateId = function generateId(table) {
         }
         var random = Math.random().toString().slice(2,11);
         var uid = prefix + random + LeftPadWithZeros(base62.encode(counter), 5);
-        console.log(uid);
-        return uid;
+        callback(uid);
     });
-}
+       // this will "return" your value to the original caller
+   
+  }
+
+// var generateId = function generateId(table) {
+//     connection.query('SELECT max(id) as counter from ' + table, function(err, res) {
+//         if(err) throw err;
+//         var counter = res[0].counter;
+//         if(!counter){
+//             counter = 1;
+//         }
+//         counter++; 
+//         var prefix;
+//         switch(table){
+//             case 'user_driver':
+//                 prefix = 'DR';
+//                 break;
+//             case 'user_rider':
+//                 prefix = 'RD';
+//                 break;
+//             case 'vehicle_owner':
+//                 prefix = 'OV';
+//                 break;
+//             case 'vehicle_master':
+//                 prefix = 'TR';
+//                 break;
+//             case 'user_admin':
+//                 prefix = 'AI';
+//                 break;
+//         }
+//         var random = Math.random().toString().slice(2,11);
+//         var uid = prefix + random + LeftPadWithZeros(base62.encode(counter), 5);
+//         console.log(uid);
+//         return uid;
+//     });
+// }
 var t0 = now();
-for(var i = 0; i < 10; i++){
-    var user = {
-        email: faker.internet.email().toLowerCase(),
-        phone: faker.phone.phoneNumberFormat().replace(/-/g, ''), 
-        first_name: faker.name.firstName(),
-        last_name: faker.name.lastName(),
-        avatar_type: 'gravatar',
-        avatar_uri: 'doodle.png',
-        password: faker.internet.password(),
-        last_login: moment().format("YYYY-MM-DD HH:mm:ss"),
-        token: cuid().substr(0,16),
-        created_by: 1
-    };
-    console.log(user);
-    // connection.query('INSERT INTO user_master SET ?', user, (err, res) => {
-    //     if(err) throw err;  
-    //     console.log('Last insert ID User_master:', res.insertId);
-    // });
-    if(i % 3 === 0){
-        var driver_id = sync.fiber(generateId('user_driver'));
-        console.log("Driver Id output: " + driver_id);
-        var driver = {
-            driver_id: driver_id,
-            email: user.email,
-            rating: null,
-            confirmation_code: null,
-            confirmed: 0
-        };
-        console.log(driver);
-        // connection.query('INSERT INTO user_driver SET ?', driver, (err, res) => {
-        //     if(err) throw err;
-        //     console.log('Last insert ID Driver:', res.insertId);
-        // });
-    }else{
-        var rider = {
-            rider_id: generateId('user_rider'),
-            email: user.email,
-            rating: null,
-            confirmation_code: null,
-            confirmed: null
-        };
-        console.log(rider);
-        // connection.query('INSERT INTO user_rider SET ?', rider, (err, res) => {
-        //     if(err) throw err;  
-        //     console.log('Last insert ID Rider:', res.insertId);
-        // });
-    }
-}
+
+
+        for(var i = 0; i < 10; i++){
+            var user = {
+                email: faker.internet.email().toLowerCase(),
+                phone: faker.phone.phoneNumberFormat().replace(/-/g, ''), 
+                first_name: faker.name.firstName(),
+                last_name: faker.name.lastName(),
+                avatar_type: 'gravatar',
+                avatar_uri: 'doodle.png',
+                password: faker.internet.password(),
+                last_login: moment().format("YYYY-MM-DD HH:mm:ss"),
+                token: cuid().substr(0,16),
+                created_by: 1
+            };
+            console.log(user);
+            // connection.query('INSERT INTO user_master SET ?', user, (err, res) => {
+            //     if(err) throw err;  
+            //     console.log('Last insert ID User_master:', res.insertId);
+            // });
+            if(i % 3 === 0){
+                var driver_id;
+                generateId('user_driver', function(response) {
+                    // use the return value here instead of like a regular (non-evented) return value
+                    driver_id = response;
+                    console.log("Driver Id output: " + driver_id);
+                });
+                console.log("outpi: " + driver_id);
+                //var driver_id = await( generateId('user_driver') );
+                //var driver_id = generateId('user_driver');
+                
+                var driver = {
+                    driver_id: driver_id,
+                    email: user.email,
+                    rating: null,
+                    confirmation_code: null,
+                    confirmed: 0
+                };
+                console.log(driver);
+                // connection.query('INSERT INTO user_driver SET ?', driver, (err, res) => {
+                //     if(err) throw err;
+                //     console.log('Last insert ID Driver:', res.insertId);
+                // });
+            }else{
+                var rider_id
+                generateId('user_rider', function(response) {
+                    // use the return value here instead of like a regular (non-evented) return value
+                   rider_id = response;
+                    console.log("Rider Id output: " + rider_id);
+                });
+                //var rider_id = await( generateId('user_rider' ) );
+                var rider = {
+                    rider_id : rider_id,
+                    email: user.email,
+                    rating: null,
+                    confirmation_code: null,
+                    confirmed: null
+                };
+                console.log(rider);
+                // connection.query('INSERT INTO user_rider SET ?', rider, (err, res) => {
+                //     if(err) throw err;  
+                //     console.log('Last insert ID Rider:', res.insertId);
+                // });
+            }
+        }
+
+
+
+
+
 
 var t1 = now()
 console.log("Call to doSomething took " + (t1 - t0).toFixed(3) + " milliseconds.");
